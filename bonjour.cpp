@@ -43,14 +43,16 @@ void Resolver::addressReady()
 		cleanUp();
 }
 
-void Resolver::cleanUp()
+QHash<QString, Resolver*>::iterator Resolver::cleanUp()
 {
 	DNSServiceRefDeallocate(DNSresolverRef);
 	DNSServiceRefDeallocate(DNSaddressRef);
 	// the QSocketNotifiers resolverNotifier and addressNotifier get deleted when the QSharedPointer gets deleted along with the Resolver.  No need to clear them here.
 	QString key = zcs->name() + QString::number(zcs->interfaceIndex());
-	ref->resolvers.remove(key);
+	QHash<QString, Resolver*>::iterator it = ref->resolvers.find(key);
+	it = ref->resolvers.erase(it);
 	delete this;
+	return it;
 }
 
 QZeroConfPrivate::QZeroConfPrivate(QZeroConf *parent)
@@ -232,8 +234,8 @@ void QZeroConfPrivate::cleanUp(DNSServiceRef toClean)
 	if (toClean == browser) {
 		browser = nullptr;
 		browserNotifier.clear();
-		for (auto resolver : resolvers)
-			resolver->cleanUp();
+		for (QHash<QString, Resolver*>::iterator it = resolvers.begin(); it != resolvers.end(); )
+			it = (*it)->cleanUp();  // cleanUp() modifies resolvers, so it returns a valid iterator
 		resolvers.clear();
 		for (auto service : pub->services)
 			emit pub->serviceRemoved(service);

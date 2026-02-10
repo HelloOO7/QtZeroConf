@@ -42,7 +42,7 @@ class Resolver : public QObject
 {
 	Q_OBJECT
 public:
-	void cleanUp();
+	QHash<QString, Resolver*>::iterator cleanUp();
 	QZeroConfService zcs;
 	QZeroConfPrivate *ref = nullptr;
 	DNSServiceRef DNSresolverRef = nullptr;
