@@ -90,13 +90,11 @@ void QZeroConfPrivate::resolve(QZeroConfService zcs)
 		int sockfd = DNSServiceRefSockFD(resolver->DNSresolverRef);
 		if (sockfd == -1) {
 			resolver->cleanUp();
-		}
-		else {
+		} else {
 			resolver->resolverNotifier = QSharedPointer<QSocketNotifier>::create(sockfd, QSocketNotifier::Read);
 			connect(resolver->resolverNotifier.data(), &QSocketNotifier::activated, resolver, &Resolver::resolverReady);
 		}
-	}
-	else {
+	} else {
 		resolver->cleanUp();
 	}
 }
@@ -107,8 +105,7 @@ void DNSSD_API QZeroConfPrivate::registerCallback(DNSServiceRef, DNSServiceFlags
 
 	if (errorCode == kDNSServiceErr_NoError) {
 		emit ref->pub->servicePublished();
-	}
-	else {
+	} else {
 		ref->cleanUp(ref->dnssRef);
 		emit ref->pub->error(QZeroConf::serviceRegistrationFailed);
 	}
@@ -134,16 +131,14 @@ void DNSSD_API QZeroConfPrivate::browseCallback(DNSServiceRef, DNSServiceFlags f
 				zcs->m_interfaceIndex = interfaceIndex;
 				ref->resolve(zcs);
 			}
-		}
-		else if (ref->pub->services.contains(key)) {
+		} else if (ref->pub->services.contains(key)) {
 			zcs = ref->pub->services[key];
 			ref->pub->services.remove(key);
 			if (ref->resolvers.contains(key))
 				ref->resolvers[key]->cleanUp();
 			emit ref->pub->serviceRemoved(zcs);
 		}
-	}
-	else {
+	} else {
 		ref->cleanUp(ref->browser);
 		emit ref->pub->error(QZeroConf::browserFailed);
 	}
@@ -162,8 +157,7 @@ void DNSSD_API QZeroConfPrivate::resolverCallback(DNSServiceRef, DNSServiceFlags
 	}
 
 	uchar recLen;
-	while (txtLen > 0)		// add txt records
-	{
+	while (txtLen > 0) {  // add txt records
 		recLen = txtRecord[0];
 		txtRecord++;
 		QByteArray avahiText(reinterpret_cast<const char *>(txtRecord), recLen);
@@ -188,15 +182,13 @@ void DNSSD_API QZeroConfPrivate::resolverCallback(DNSServiceRef, DNSServiceFlags
 		int sockfd = DNSServiceRefSockFD(resolver->DNSaddressRef);
 		if (sockfd == -1) {
 			resolver->cleanUp();
-		}
-		else {
+		} else {
 			// Fix "multiple socket notifiers for same socket" warning
 			resolver->addressNotifier.clear();
 			resolver->addressNotifier = QSharedPointer<QSocketNotifier>::create(sockfd, QSocketNotifier::Read);
 			connect(resolver->addressNotifier.data(), &QSocketNotifier::activated, resolver, &Resolver::addressReady);
 		}
-	}
-	else {
+	} else {
 		resolver->cleanUp();
 	}
 }
@@ -222,21 +214,22 @@ void DNSSD_API QZeroConfPrivate::addressReply(DNSServiceRef sdRef,
 			if (!resolver->ref->pub->services.contains(key)) {
 				resolver->ref->pub->services.insert(key, resolver->zcs);
 				emit resolver->ref->pub->serviceAdded(resolver->zcs);
-			}
-			else
+			} else {
 				emit resolver->ref->pub->serviceUpdated(resolver->zcs);
+			}
 
 		}
-	}
-	else
+	} else {
 		resolver->cleanUp();
+	}
 }
 
 void QZeroConfPrivate::cleanUp(DNSServiceRef toClean)
 {
 	if (!toClean)
 		return;
-	else if (toClean == browser) {
+
+	if (toClean == browser) {
 		browser = nullptr;
 		browserNotifier.clear();
 		for (auto resolver : resolvers)
@@ -245,8 +238,7 @@ void QZeroConfPrivate::cleanUp(DNSServiceRef toClean)
 		for (auto service : pub->services)
 			emit pub->serviceRemoved(service);
 		pub->services.clear();
-	}
-	else if (toClean == dnssRef) {
+	} else if (toClean == dnssRef) {
 		dnssRef = nullptr;
 		serviceNotifier.clear();
 	}
@@ -290,13 +282,11 @@ void QZeroConf::startServicePublish(const char *name, const char *type, const ch
 		if (sockfd == -1) {
 			pri->cleanUp(pri->dnssRef);
 			emit error(QZeroConf::serviceRegistrationFailed);
-		}
-		else {
+		} else {
 			pri->serviceNotifier = QSharedPointer<QSocketNotifier>::create(sockfd, QSocketNotifier::Read, this);
 			connect(pri->serviceNotifier.data(), &QSocketNotifier::activated, pri, &QZeroConfPrivate::bsRead);
 		}
-	}
-	else {
+	} else {
 		pri->cleanUp(pri->dnssRef);
 		emit error(QZeroConf::serviceRegistrationFailed);
 	}
@@ -357,13 +347,11 @@ void QZeroConf::startBrowser(QString type, QAbstractSocket::NetworkLayerProtocol
 		if (sockfd == -1) {
 			pri->cleanUp(pri->browser);
 			emit error(QZeroConf::browserFailed);
-		}
-		else {
+		} else {
 			pri->browserNotifier = QSharedPointer<QSocketNotifier>::create(sockfd, QSocketNotifier::Read, this);
 			connect(pri->browserNotifier.data(), &QSocketNotifier::activated, pri, &QZeroConfPrivate::browserRead);
 		}
-	}
-	else {
+	} else {
 		pri->cleanUp(pri->browser);
 		emit error(QZeroConf::browserFailed);
 	}
