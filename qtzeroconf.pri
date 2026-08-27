@@ -27,20 +27,35 @@ win32 {
 	DEFINES+= NDEBUG
 	DEFINES+= _WINDOWS
 	DEFINES+= _USRDLL
-	DEFINES+= MDNS_DEBUGMSGS=0
 	DEFINES+= WIN32_LEAN_AND_MEAN
 	DEFINES+= USE_TCP_LOOPBACK
 	DEFINES+= _CRT_SECURE_NO_DEPRECATE
 	DEFINES+= _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1
 	DEFINES+= NOT_HAVE_SA_LEN
-	QMAKE_CFLAGS+= -I$$PWD/bonjour-sdk
-	QMAKE_CXXFLAGS+= -I$$PWD/bonjour-sdk -I$$PWD
-	HEADERS+= $$PWD/qzeroconf.h $$PWD/bonjour_p.h
-	SOURCES+= $$PWD/bonjour.cpp
-	SOURCES+= $$PWD/bonjour-sdk/dnssd_clientlib.c
-	SOURCES+= $$PWD/bonjour-sdk/dnssd_clientstub.c
-	SOURCES+= $$PWD/bonjour-sdk/dnssd_ipc.c
-	LIBS+= -lws2_32 -lwsock32
+	HEADERS+= $$PWD/qzeroconf.h
+
+        isEmpty(WIN32_MDNS_BACKEND) {
+	    WIN32_MDNS_BACKEND = windns
+	}
+
+        equals(WIN32_MDNS_BACKEND, bonjour) {
+	        DEFINES+= MDNS_DEBUGMSGS=0
+		QMAKE_CFLAGS+= -I$$PWD/bonjour-sdk
+		QMAKE_CXXFLAGS+= -I$$PWD/bonjour-sdk -I$$PWD
+		HEADERS+= $$PWD/bonjour_p.h
+		SOURCES+= $$PWD/bonjour.cpp
+		SOURCES+= $$PWD/bonjour-sdk/dnssd_clientlib.c
+		SOURCES+= $$PWD/bonjour-sdk/dnssd_clientstub.c
+		SOURCES+= $$PWD/bonjour-sdk/dnssd_ipc.c
+		LIBS+= -lws2_32 -lwsock32
+	} else:equals(WIN32_MDNS_BACKEND, windns) {
+	        SOURCES+= $$PWD/windns.cpp
+		LIBS+= -ldnsapi -lwsock32
+	} else {
+	        error("WIN32_MDNS_BACKEND must be 'windns' or 'bonjour'")
+	}
+
+        QMAKE_CXXFLAGS+= -I$$PWD
 }
 
 macx {
