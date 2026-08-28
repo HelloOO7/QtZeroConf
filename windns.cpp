@@ -32,6 +32,13 @@
 #include <WinDNS.h>
 #include <winsock.h>
 
+// MinGW kit does not have this status code in winerror.h, before this commit
+// https://github.com/mingw-w64/mingw-w64/commit/ddeb05ab2925f63081616373cb4ccd05ac3b3b7c
+// So we define it ourselves if missing.
+#ifndef DNS_REQUEST_PENDING
+#define DNS_REQUEST_PENDING __MSABI_LONG(9506)
+#endif
+
 #ifndef WINDNS_DEBUG_MESSAGES
 #define DNSDEBUG QNoDebug
 #else
