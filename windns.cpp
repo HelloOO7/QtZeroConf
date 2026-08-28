@@ -116,7 +116,7 @@ public:
 		registrationComplete = false;
 		DWORD result = DnsServiceRegister(&registration, &registrationCancel);
 		if (result != DNS_REQUEST_PENDING) {
-			qWarning("WinDNS::startRegistration() error %u", result);
+			qWarning("WinDNS::startRegistration() error %lu", result);
 			return false;
 		}
 		DNSDEBUG() << "WinDNS::startRegistration() pending";
@@ -154,7 +154,7 @@ public:
 		browseProtocol = protocol;
 		DWORD result = DnsServiceBrowse(&browse, &browseCancel);
 		if (result != DNS_REQUEST_PENDING) {
-			qWarning("WinDNS::startBrowse() error %u", result);
+			qWarning("WinDNS::startBrowse() error %lu", result);
 			return false;
 		}
 		browseRunning = true;
@@ -168,7 +168,7 @@ public:
 			if (result == ERROR_SUCCESS || result == ERROR_CANCELLED) {
 				browseRunning = false;
 			} else {
-				qWarning("WinDNS::cancelBrowse() cancellation error %u", result);
+				qWarning("WinDNS::cancelBrowse() cancellation error %lu", result);
 				return false;
 			}
 			hostIps4.clear();
@@ -230,7 +230,7 @@ private:
 			if (result == ERROR_SUCCESS || result == ERROR_CANCELLED) {
 				registrationPending = false;
 			} else {
-				qWarning("WinDNS::cancelRegistration() cancellation error %u", result);
+				qWarning("WinDNS::cancelRegistration() cancellation error %lu", result);
 				return false;
 			}
 			DNSDEBUG() << "WinDNS::cancelRegistration() OK";
@@ -248,7 +248,7 @@ private:
 				// over by the time another deregister call or a registration is started
 				deregisterPromise.future().waitForFinished();
 			} else {
-				qWarning("WinDNS::deregisterService() deregistration error %u", result);
+				qWarning("WinDNS::deregisterService() deregistration error %lu", result);
 				return false;
 			}
 			DNSDEBUG() << "WinDNS::deregisterService() pending";
@@ -311,7 +311,7 @@ private:
 		wchar_t* buffer = new wchar_t[size];
 		if (!GetComputerNameExW(ComputerNameDnsHostname, buffer, &size)) {
 			delete[] buffer;
-			qWarning("WinDNS::getLocalHostname() error %u", GetLastError());
+			qWarning("WinDNS::getLocalHostname() error %lu", GetLastError());
 			return false;
 		}
 		*dest = QString::fromUtf16(reinterpret_cast<char16_t*>(buffer));
@@ -536,7 +536,7 @@ private:
 		} else if (queryResults->QueryStatus != ERROR_CANCELLED) {
 			// cancellation callback is called synchronously, so no need to report to
 			// a condition variable.
-			qWarning("WinDNS::browseCallback() error %u", queryResults->QueryStatus);
+			qWarning("WinDNS::browseCallback() error %ld", queryResults->QueryStatus);
 			emit pub->error(QZeroConf::browserFailed);
 		}
 		DnsRecordListFree(queryResults->pQueryRecords, DnsFreeRecordList);
