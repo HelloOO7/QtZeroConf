@@ -45,6 +45,12 @@
 #define DNSDEBUG qDebug
 #endif
 
+// DnsService API always uses wide-char strings,
+// but callback function prototypes have PDNS_QUERY_RESULT
+// which has variable encoding. This is wrong, as the data
+// is actually always wide-char, so we need to reinterpret it as such.
+#define PMDNS_RECORD PDNS_RECORDW
+
 class QZeroConfPrivate
 {
 public:
@@ -214,8 +220,8 @@ private:
 		return reinterpret_cast<const WCHAR*>(str.utf16());
 	}
 
-	QString WinToQString(LPWSTR wstr) {
-		return QString::fromUtf16(reinterpret_cast<const char16_t*>(wstr));
+	QString WinToQString(LPWSTR tstr) {
+		return QString::fromUtf16(reinterpret_cast<const char16_t*>(tstr));
 	}
 
 	void clearWinStringVector(QVector<PCWSTR>& vec) {
@@ -355,7 +361,7 @@ private:
 		return pub->services[name];
 	}
 
-	void handleBrowseResult(PDNS_RECORD record) {
+	void handleBrowseResult(PMDNS_RECORD record) {
 		if (isRecordProtocolMismatch(record)) {
 			return;
 		}
@@ -460,7 +466,7 @@ private:
 		}
 	}
 
-	bool isRecordProtocolMismatch(PDNS_RECORD record) {
+	bool isRecordProtocolMismatch(PMDNS_RECORD record) {
 		if (browseProtocol == QAbstractSocket::NetworkLayerProtocol::IPv4Protocol) {
 			return record->wType == DNS_TYPE_AAAA;
 		} else if (browseProtocol == QAbstractSocket::NetworkLayerProtocol::IPv6Protocol) {
@@ -529,7 +535,7 @@ private:
 		if (queryResults->QueryStatus == ERROR_SUCCESS) {
 			DNSDEBUG() << "WinDNS::browseCallback() OK";
 
-			PDNS_RECORD record = queryResults->pQueryRecords;
+			PMDNS_RECORD record = (PMDNS_RECORD) queryResults->pQueryRecords;
 			while (record) {
 				handleBrowseResult(record);
 				record = record->pNext;
