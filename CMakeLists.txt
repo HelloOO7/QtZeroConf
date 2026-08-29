@@ -59,28 +59,40 @@ target_include_directories(QtZeroConf PUBLIC
 target_link_libraries(QtZeroConf PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network)
 
 if(WIN32)
-    target_sources(QtZeroConf PRIVATE
-        bonjour_p.h
-        bonjour.cpp
-        bonjour-sdk/dnssd_clientlib.c
-        bonjour-sdk/dnssd_clientstub.c
-        bonjour-sdk/dnssd_ipc.c
-    )
-    target_link_libraries(QtZeroConf PUBLIC ws2_32)
-    if(MSVC)
-        target_link_libraries(QtZeroConf PUBLIC "legacy_stdio_definitions.lib")
-    endif()
+    set(WIN32_MDNS_BACKEND "windns" CACHE STRING "mDNS backend to use on Windows: windns or bonjour")
+    set_property(CACHE WIN32_MDNS_BACKEND PROPERTY STRINGS windns bonjour)
+
     target_compile_definitions(QtZeroConf PRIVATE
         -DWIN32
         -D_USRDLL
-        -DMDNS_DEBUGMSGS=0
         -DWIN32_LEAN_AND_MEAN
         -DUSE_TCP_LOOPBACK
         -D_NO_CRT_STDIO_INLINE
         -D_CRT_SECURE_NO_DEPRECATE
         -D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1
         -DNOT_HAVE_SA_LEN)
-    target_include_directories(QtZeroConf PRIVATE "${CMAKE_CURRENT_LIST_DIR}/bonjour-sdk")
+
+    if(WIN32_MDNS_BACKEND STREQUAL "bonjour")
+        target_sources(QtZeroConf PRIVATE
+            bonjour_p.h
+            bonjour.cpp
+            bonjour-sdk/dnssd_clientlib.c
+            bonjour-sdk/dnssd_clientstub.c
+            bonjour-sdk/dnssd_ipc.c
+        )
+        target_compile_definitions(QtZeroConf PRIVATE -DMDNS_DEBUGMSGS=0)
+        target_link_libraries(QtZeroConf PUBLIC ws2_32 wsock32)
+        target_include_directories(QtZeroConf PRIVATE "${CMAKE_CURRENT_LIST_DIR}/bonjour-sdk")
+    elseif(WIN32_MDNS_BACKEND STREQUAL "windns")
+        target_sources(QtZeroConf PRIVATE windns.cpp)
+        target_link_libraries(QtZeroConf PUBLIC dnsapi wsock32)
+    else()
+        message(FATAL_ERROR "WIN32_MDNS_BACKEND must be 'windns' or 'bonjour'")
+    endif()
+
+    if(MSVC)
+        target_link_libraries(QtZeroConf PUBLIC "legacy_stdio_definitions.lib")
+    endif()
 endif()
 
 if(ANDROID_AVAHI)
