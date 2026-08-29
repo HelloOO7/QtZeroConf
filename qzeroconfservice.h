@@ -4,6 +4,7 @@
 #include <QHostAddress>
 #include <QMutexLocker>
 #include <QSharedPointer>
+#include <QMap>
 #include "qzeroconfglobal.h"
 
 class QZeroConfPrivate;
